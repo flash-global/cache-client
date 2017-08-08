@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ruleset name="Cache client">
+    <description>PSR2 Coding standard</description>
+
+    <!-- display progress -->
+    <arg value="n"/>
+    <arg value="p"/>
+    <arg name="colors"/>
+
+    <rule ref="PSR2" />
+
+</ruleset>
