@@ -21,7 +21,7 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->instance = new CacheManager();
+        $this->instance = new CacheManager(new BlackHole());
     }
 
     /**
@@ -58,6 +58,136 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
 
         $result = $this->instance->get($key);
         $this->assertEquals(unserialize($collection), $result);
+    }
+
+    public function testCanGetTheAllThePossibleKeyForAVehicle()
+    {
+        $id = '123';
+
+        $expectedKeys = [
+            (new DateTime())->format('Ymd') . '000000' . $id,
+            (new DateTime('-1 day'))->format('Ymd') . '000000' . $id,
+            (new DateTime('-2 days'))->format('Ymd') . '000000' . $id,
+            (new DateTime('-3 days'))->format('Ymd') . '000000' . $id,
+            (new DateTime('-4 days'))->format('Ymd') . '000000' . $id
+        ];
+        $this->instance->setMaxDays(5);
+        $keys = $this->instance->getAllKeys($id);
+
+        $this->assertEquals($expectedKeys, $keys);
+    }
+
+    public function testCanSetAMaxSearchingLimit()
+    {
+        $this->instance->setMaxDays(10);
+
+        $this->assertAttributeEquals(10, 'maxDays', $this->instance);
+        $this->assertCount(10, $this->instance->getAllKeys('12345'));
+    }
+
+    public function testCanRetrieveTheLastLocations()
+    {
+        $id = '123';
+        $locations = new Collection();
+
+        $cache = $this->getMockBuilder(BlackHole::class)->getMock();
+        $cache->method('hasItems')
+              ->with([
+                  (new DateTime())->format('Ymd') . '000000' . $id,
+                  (new DateTime('-1 day'))->format('Ymd') . '000000' . $id,
+                  (new DateTime('-2 days'))->format('Ymd') . '000000' . $id,
+                  (new DateTime('-3 days'))->format('Ymd') . '000000' . $id,
+                  (new DateTime('-4 days'))->format('Ymd') . '000000' . $id
+              ])
+              ->willReturn([
+                  (new DateTime('-2 days'))->format('Ymd') . '000000' . $id,
+                  (new DateTime('-4 days'))->format('Ymd') . '000000' . $id
+              ]);
+        $cache->method('hasItem')
+              ->with((new DateTime('-2 days'))->format('Ymd') . '000000' . $id)
+              ->willReturn(true)
+        ;
+        $cache->method('getItem')
+            ->with((new DateTime('-2 days'))->format('Ymd') . '000000' . $id)
+            ->willReturn(serialize($locations))
+        ;
+
+        $this->instance->setCache($cache);
+        $this->instance->setMaxDays(5);
+        $result = $this->instance->retrieveLastLocations($id);
+
+        $this->assertEquals($locations, $result);
+    }
+
+    public function testCanRetrieveLocationWithDateInterval()
+    {
+        $id = '123';
+        $from = new DateTime('2017-07-30');
+        $to = new DateTime('2017-08-02');
+
+        $collection1 = new Collection();
+        $collection2 = new Collection();
+        $collection3 = new Collection();
+
+        $cache = $this->getMockBuilder(BlackHole::class)->getMock();
+        $cache->method('hasItems')
+              ->with([
+                  '20170730000000123',
+                  '20170731000000123',
+                  '20170801000000123',
+                  '20170802000000123',
+              ])
+              ->willReturn([
+                  '20170730000000123',
+                  '20170731000000123',
+                  '20170801000000123'
+              ]);
+        $cache->method('getItems')
+              ->with([
+                  '20170730000000123',
+                  '20170731000000123',
+                  '20170801000000123'
+              ])
+              ->willReturn([serialize($collection1), serialize($collection2), serialize($collection3)])
+        ;
+
+        $this->instance->setCache($cache);
+        $result = $this->instance->retrieveLocations($id, $from, $to);
+
+        $this->assertEquals([$collection1, $collection2, $collection3], $result);
+    }
+
+    public function testCanRetrieveLastLocations()
+    {
+        $id = '123';
+        $from = new DateTime('-2 days');
+
+        $collection1 = new Collection();
+        $collection2 = new Collection();
+
+        $cache = $this->getMockBuilder(BlackHole::class)->getMock();
+        $cache->method('hasItems')
+              ->with([
+                  (new DateTime('-2 days'))->format('Ymd') . '000000' . $id,
+                  (new DateTime('-1 day'))->format('Ymd') . '000000' . $id,
+                  (new DateTime())->format('Ymd') . '000000' . $id
+              ])
+              ->willReturn([
+                  (new DateTime())->format('Ymd') . '000000' . $id,
+                  (new DateTime('-1 day'))->format('Ymd') . '000000' . $id
+              ]);
+        $cache->method('getItems')
+              ->with([
+                  (new DateTime())->format('Ymd') . '000000' . $id,
+                  (new DateTime('-1 day'))->format('Ymd') . '000000' . $id
+              ])
+              ->willReturn([serialize($collection1), serialize($collection2)])
+        ;
+
+        $this->instance->setCache($cache);
+        $result = $this->instance->retrieveLocations($id, $from);
+
+        $this->assertEquals([$collection1, $collection2], $result);
     }
 
     /**
@@ -111,6 +241,5 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
             [new DateTime('5/25'), '0', '201705250000000'],
             [new DateTime('July 1st, 2016'), 'null', '20160701000000null'],
         ];
-
     }
 }
