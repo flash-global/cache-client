@@ -2,6 +2,8 @@
 
 namespace Fei\Cache\Location;
 
+use DateInterval;
+use DatePeriod;
 use Doctrine\Common\Collections\ArrayCollection;
 use Fei\Service\Locate\Entity\Context;
 use Fei\Service\Locate\Entity\Location;
@@ -34,6 +36,18 @@ class CacheManager extends BaseCacheManager
 
     /** Position of the vehicle ID in the cache key */
     const KEY_ID_START = 14;
+
+    /** Locations will be saved for this lifetime by default */
+    const DEFAULT_CACHE_TTL = 30;
+
+    /**
+     * Max number of days we can search back with methods
+     * CacheManager::getAllKeys
+     * CacheManager::retrieveLastLocations
+     *
+     * @var int
+     */
+    protected $maxDays = self::DEFAULT_CACHE_TTL;
 
     /**
      * Add a FifoCollection to a cache
@@ -85,15 +99,14 @@ class CacheManager extends BaseCacheManager
             $item = unserialize(
                 $this->getCache()->getItem($key),
                 [
-                    'allowed_classes' =>
-                        [
-                            Collection::class,
-                            \ObjectivePHP\Primitives\Collection\Collection::class,
-                            ObjectValidator::class,
-                            Location::class,
-                            ArrayCollection::class,
-                            Context::class,
-                        ],
+                    'allowed_classes' => [
+                        Collection::class,
+                        \ObjectivePHP\Primitives\Collection\Collection::class,
+                        ObjectValidator::class,
+                        Location::class,
+                        ArrayCollection::class,
+                        Context::class,
+                    ],
                 ]
             );
         }
@@ -138,6 +151,113 @@ class CacheManager extends BaseCacheManager
     {
         $date->setTime(0, 0);
 
-        return str_replace([' ', ':', '-'], '', $date->format('Y-m-d H:i:s')) . $id;
+        return $date->format('YmdHis') . $id;
+    }
+
+    /**
+     * Return all possible keys for a given ID
+     *
+     * @param string $id
+     *
+     * @return array
+     */
+    public function getAllKeys(string $id): array
+    {
+        $result = [];
+        for ($i = 0; $i < $this->getMaxDays(); $i++) {
+            $result[] = $this->generateKey(new \DateTime("- {$i} days"), $id);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Search in the cache for the last location collection of a given ID
+     *
+     * @param string $id
+     *
+     * @return Collection
+     *
+     * @throws \Zend\Cache\Exception\ExceptionInterface
+     */
+    public function retrieveLastLocations(string $id): Collection
+    {
+        $keys = $this->getCache()->hasItems($this->getAllKeys($id));
+
+        $cleanedDates = array_map(function ($key) use ($id) {
+            $date = strstr($key, $id, true);
+            return \DateTime::createFromFormat('YmdHis', $date);
+        }, $keys);
+
+        $lastLocationKey = $this->generateKey(max($cleanedDates), $id);
+
+        return $this->get($lastLocationKey);
+    }
+
+    /**
+     * Get the Locations collections of a given ID in an interval of date.
+     * If $to is not given, current time of the day will be used.
+     *
+     * @param string         $id
+     * @param \DateTime      $from
+     * @param \DateTime|null $to
+     *
+     * @return Collection[]
+     * @throws \Zend\Cache\Exception\ExceptionInterface
+     */
+    public function retrieveLocations(string $id, \DateTime $from, \DateTime $to = null): array
+    {
+        $to = $to ?? new \DateTime();
+        // Date interval exclude the last day, so we have to add one day to stay consistent
+        $to->modify('+1 day');
+
+        $interval = DateInterval::createFromDateString('1 day');
+        $period = new DatePeriod($from, $interval, $to);
+
+        $keys = [];
+        /** @var \DateTime $date */
+        foreach ($period as $date) {
+            $keys[] = $this->generateKey($date, $id);
+        }
+        $remainingKeys = $this->getCache()->hasItems($keys);
+
+        return array_map(
+            function ($value) {
+                return unserialize(
+                    $value,
+                    [
+                    'allowed_classes' => [
+                        Collection::class,
+                        \ObjectivePHP\Primitives\Collection\Collection::class,
+                        ObjectValidator::class,
+                        Location::class,
+                        ArrayCollection::class,
+                        Context::class,
+                    ],
+                    ]
+                );
+            },
+            $this->getCache()->getItems($remainingKeys)
+        );
+    }
+
+    /**
+     * @param int $maxDays
+     *
+     * @return CacheManager
+     */
+    public function setMaxDays(int $maxDays): CacheManager
+    {
+        $this->maxDays = $maxDays;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxDays(): int
+    {
+        return $this->maxDays;
     }
 }
