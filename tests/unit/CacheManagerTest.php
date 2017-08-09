@@ -17,7 +17,7 @@ class CacheManagerTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->instance = new CacheManager();
+        $this->instance = new CacheManager(new BlackHole());
     }
 
     public function testCanStore()

@@ -14,6 +14,18 @@ abstract class AbstractCacheManager implements CacheManagerInterface
     protected $cache;
 
     /**
+     * AbstractCacheManager constructor.
+     * A CacheManager NEEDS a storage to work with
+     *
+     * @param StorageInterface $cache
+     */
+    public function __construct(StorageInterface $cache)
+    {
+        $this->cache = $cache;
+    }
+
+
+    /**
      * @param StorageInterface $cache
      *
      * @return CacheManagerInterface
