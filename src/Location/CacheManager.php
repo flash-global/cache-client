@@ -236,7 +236,6 @@ class CacheManager extends BaseCacheManager
                         ObjectValidator::class,
                         Location::class,
                         ArrayCollection::class,
-                        Context::class,
                     ],
                     ]
                 );
