@@ -189,7 +189,7 @@ class CacheManager extends BaseCacheManager
             return \DateTime::createFromFormat('YmdHis', $date);
         }, $keys);
 
-        $lastLocationKey = $this->generateKey(max($cleanedDates), $id);
+        $lastLocationKey = empty($cleanedDates) ? [] : $this->generateKey(max($cleanedDates), $id);
 
         return $this->get($lastLocationKey);
     }
@@ -219,7 +219,11 @@ class CacheManager extends BaseCacheManager
         foreach ($period as $date) {
             $keys[] = $this->generateKey($date, $id);
         }
+        // Should not be empty (beacause zend cache will explode)
         $remainingKeys = $this->getCache()->hasItems($keys);
+
+        // Bypassing the bad implementation of StorageInterface::getItems
+        $items = empty($remainingKeys) ? [] : $this->getCache()->getItems($remainingKeys);
 
         return array_map(
             function ($value) {
@@ -237,7 +241,7 @@ class CacheManager extends BaseCacheManager
                     ]
                 );
             },
-            $this->getCache()->getItems($remainingKeys)
+            $items
         );
     }
 
