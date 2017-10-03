@@ -49,15 +49,19 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
     public function testCanRetrieveLocation()
     {
         $key = '20170802000000123';
-        $collection = serialize(new Collection());
+
+        $collection = new Collection();
+        $collection->add((new \Fei\Service\Locate\Entity\Location())->setContext(['toto' => 123]));
+
+        $serializeCollection = serialize($collection);
 
         $cache = $this->getMockBuilder(BlackHole::class)->getMock();
         $cache->expects($this->exactly(1))->method('hasItem')->with($key)->willReturn(true);
-        $cache->expects($this->exactly(1))->method('getItem')->with($key)->willReturn($collection);
+        $cache->expects($this->exactly(1))->method('getItem')->with($key)->willReturn($serializeCollection);
         $this->instance->setCache($cache);
 
         $result = $this->instance->get($key);
-        $this->assertEquals(unserialize($collection), $result);
+        $this->assertEquals(unserialize($serializeCollection), $result);
     }
 
     public function testCanGetTheAllThePossibleKeyForAVehicle()
