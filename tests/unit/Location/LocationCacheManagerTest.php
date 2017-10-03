@@ -119,6 +119,29 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($locations, $result);
     }
 
+    public function testReturnEmptyWithNoMatchingLocations()
+    {
+        $from = new DateTime('2017-07-30');
+        $id = '123';
+
+        $cache = $this->getMockBuilder(BlackHole::class)->getMock();
+
+        $cache->method('hasItems')
+              ->willReturn([]);
+
+        $this->instance->setCache($cache);
+        $result = $this->instance->retrieveLocations($id, $from);
+
+        $this->assertInternalType('array', $result);
+        $this->assertEmpty($result);
+
+        $result2 = $this->instance->retrieveLastLocations($id);
+
+        $this->assertInstanceOf(Collection::class, $result2);
+        $this->assertEmpty($result2);
+
+    }
+
     public function testCanRetrieveLocationWithDateInterval()
     {
         $id = '123';
