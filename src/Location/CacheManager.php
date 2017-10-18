@@ -227,7 +227,6 @@ class CacheManager extends BaseCacheManager
             return $keys[$key];
         }, $remainingKeys);
 
-        codecept_debug($remainingKeys);
         // Bypassing the bad implementation of StorageInterface::getItems
         $items = empty($remainingKeys) ? [] : $this->getCache()->getItems($remainingKeys);
 
