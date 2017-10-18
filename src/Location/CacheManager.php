@@ -5,7 +5,6 @@ namespace Fei\Cache\Location;
 use DateInterval;
 use DatePeriod;
 use Doctrine\Common\Collections\ArrayCollection;
-use Fei\Service\Locate\Entity\Context;
 use Fei\Service\Locate\Entity\Location;
 use Fei\Cache\CacheManager as BaseCacheManager;
 use Fei\Cache\CacheManagerInterface;
@@ -181,12 +180,14 @@ class CacheManager extends BaseCacheManager
      */
     public function retrieveLastLocations(string $id): Collection
     {
-        $keys = $this->getCache()->hasItems($this->getAllKeys($id));
+        $keys = $this->getAllKeys($id);
+        $remainingKeys = $this->getCache()->hasItems($keys);
 
-        $cleanedDates = array_map(function ($key) use ($id) {
-            $date = strstr($key, $id, true);
+        $cleanedDates = array_map(function ($key) use ($keys, $id) {
+            $value =  $keys[$key];
+            $date = strstr($value, $id, true);
             return \DateTime::createFromFormat('YmdHis', $date);
-        }, $keys);
+        }, $remainingKeys);
 
         $lastLocationKey = empty($cleanedDates) ? [] : $this->generateKey(max($cleanedDates), $id);
 
@@ -220,6 +221,9 @@ class CacheManager extends BaseCacheManager
         }
         // Should not be empty (beacause zend cache will explode)
         $remainingKeys = $this->getCache()->hasItems($keys);
+        $remainingKeys = array_map(function ($key) use ($keys) {
+            return $keys[$key];
+        }, $remainingKeys);
 
         // Bypassing the bad implementation of StorageInterface::getItems
         $items = empty($remainingKeys) ? [] : $this->getCache()->getItems($remainingKeys);
