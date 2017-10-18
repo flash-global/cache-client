@@ -104,8 +104,8 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
                   (new DateTime('-4 days'))->format('Ymd') . '000000' . $id
               ])
               ->willReturn([
-                  (new DateTime('-2 days'))->format('Ymd') . '000000' . $id,
-                  (new DateTime('-4 days'))->format('Ymd') . '000000' . $id
+                  2,//(new DateTime('-2 days'))->format('Ymd') . '000000' . $id
+                  4,//(new DateTime('-4 days'))->format('Ymd') . '000000' . $id
               ]);
         $cache->method('hasItem')
               ->with((new DateTime('-2 days'))->format('Ymd') . '000000' . $id)
@@ -165,9 +165,9 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
                   '20170802000000123',
               ])
               ->willReturn([
-                  '20170730000000123',
-                  '20170731000000123',
-                  '20170801000000123'
+                  0,//'20170730000000123'
+                  1,//'20170731000000123'
+                  2//'20170801000000123'
               ]);
         $cache->method('getItems')
               ->with([
@@ -200,8 +200,8 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
                   (new DateTime())->format('Ymd') . '000000' . $id
               ])
               ->willReturn([
-                  (new DateTime())->format('Ymd') . '000000' . $id,
-                  (new DateTime('-1 day'))->format('Ymd') . '000000' . $id
+                  2,//(new DateTime())->format('Ymd') . '000000' . $id
+                  1//(new DateTime('-1 day'))->format('Ymd') . '000000' . $id
               ]);
         $cache->method('getItems')
               ->with([
