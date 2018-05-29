@@ -165,9 +165,9 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
                   '20170802000000123',
               ])
               ->willReturn([
-                  0,//'20170730000000123'
-                  1,//'20170731000000123'
-                  2//'20170801000000123'
+                  '20170730000000123',
+                  '20170731000000123',
+                  '20170801000000123'
               ]);
         $cache->method('getItems')
               ->with([
@@ -200,8 +200,8 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
                   (new DateTime())->format('Ymd') . '000000' . $id
               ])
               ->willReturn([
-                  2,//(new DateTime())->format('Ymd') . '000000' . $id
-                  1//(new DateTime('-1 day'))->format('Ymd') . '000000' . $id
+                  (new DateTime())->format('Ymd') . '000000' . $id,
+                  (new DateTime('-1 day'))->format('Ymd') . '000000' . $id
               ]);
         $cache->method('getItems')
               ->with([
@@ -264,8 +264,8 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
         return [
             [new DateTime('2017-07-07 08:42:40'), '12345', '2017070700000012345'],
             [new DateTime('1337-01-02 00:00:00'), 'azerty', '13370102000000azerty'],
-            [new DateTime('5/25'), '0', '201705250000000'],
-            [new DateTime('5/25'), '0', '201705250000000'],
+            [new DateTime('5/25'), '0', '201805250000000'],
+            [new DateTime('5/25'), '0', '201805250000000'],
             [new DateTime('July 1st, 2016'), 'null', '20160701000000null'],
         ];
     }

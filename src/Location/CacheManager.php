@@ -221,9 +221,6 @@ class CacheManager extends BaseCacheManager
         }
         // Should not be empty (beacause zend cache will explode)
         $remainingKeys = $this->getCache()->hasItems($keys);
-        $remainingKeys = array_map(function ($key) use ($keys) {
-            return $keys[$key];
-        }, $remainingKeys);
 
         // Bypassing the bad implementation of StorageInterface::getItems
         $items = empty($remainingKeys) ? [] : $this->getCache()->getItems($remainingKeys);
