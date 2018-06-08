@@ -189,8 +189,13 @@ class CacheManager extends BaseCacheManager
             return \DateTime::createFromFormat('YmdHis', $date);
         }, $remainingKeys);
 
-        $lastLocationKey = empty($cleanedDates) ? [] : $this->generateKey(max($cleanedDates), $id);
+        $lastLocationKey = empty($cleanedDates) ? '' : $this->generateKey(max($cleanedDates), $id);
 
+        // We can't fetch the cache with no key, so we directly return an empty Collection
+        if ($lastLocationKey === '') {
+            return new Collection();
+        }
+        
         return $this->get($lastLocationKey);
     }
 
