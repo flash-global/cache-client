@@ -195,7 +195,7 @@ class CacheManager extends BaseCacheManager
         if ($lastLocationKey === '') {
             return new Collection();
         }
-        
+
         return $this->get($lastLocationKey);
     }
 

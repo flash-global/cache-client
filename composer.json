@@ -1,6 +1,6 @@
 {
     "name": "fei/cache-client",
-    "license": "proprietary",
+    "license": "GPL-3.0",
     "description": "Wrapper of zend cache",
     "type": "library",
     "authors": [
@@ -17,7 +17,7 @@
     "require": {
         "objective-php/primitives": "^1.3",
         "zendframework/zend-cache": "^2.7",
-        "fei/locate-client": "^1.0.4"
+        "fei/locate-client": "^1.0.12"
     },
     "require-dev": {
         "phpro/grumphp": "^0.11",
