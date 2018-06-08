@@ -183,9 +183,8 @@ class CacheManager extends BaseCacheManager
         $keys = $this->getAllKeys($id);
         $remainingKeys = $this->getCache()->hasItems($keys);
 
-        $cleanedDates = array_map(function ($key) use ($keys, $id) {
-            $value =  $keys[$key];
-            $date = strstr($value, $id, true);
+        $cleanedDates = array_map(function ($key) use ($id) {
+            $date = strstr($key, $id, true);
             return \DateTime::createFromFormat('YmdHis', $date);
         }, $remainingKeys);
 

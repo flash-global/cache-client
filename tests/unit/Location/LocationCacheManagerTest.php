@@ -104,8 +104,8 @@ class LocationCacheManagerTest extends PHPUnit_Framework_TestCase
                   (new DateTime('-4 days'))->format('Ymd') . '000000' . $id
               ])
               ->willReturn([
-                  2,//(new DateTime('-2 days'))->format('Ymd') . '000000' . $id
-                  4,//(new DateTime('-4 days'))->format('Ymd') . '000000' . $id
+                  (new DateTime('-2 days'))->format('Ymd') . '000000' . $id,
+                  (new DateTime('-4 days'))->format('Ymd') . '000000' . $id
               ]);
         $cache->method('hasItem')
               ->with((new DateTime('-2 days'))->format('Ymd') . '000000' . $id)
